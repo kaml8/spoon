@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: (MIT OR CECILL-C)
  *
- * Copyright (C) 2006-2019 INRIA and contributors
+ * Copyright (C) 2006-2023 INRIA and contributors
  *
- * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) of the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
+ * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) or the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
  */
 package spoon.reflect.visitor;
 
@@ -146,10 +146,20 @@ public class ElementPrinterHelper {
 		}
 	}
 
+	/**
+	 * Writes the executable parameters of the given executable. This includes the receiver parameter if it is present.
+	 * For example, for a method `void foo(int a, int b)`, this method will write `(int a, int b)`.
+	 * @param executable The executable to write the parameters for. This can be a method, constructor, or lambda.
+	 */
 	public void writeExecutableParameters(CtExecutable<?> executable) {
-		printList(executable.getParameters(), null,
+		List<CtElement> parameters = new ArrayList<>();
+		if (executable.getReceiverParameter() != null) {
+			parameters.add(executable.getReceiverParameter());
+		}
+		parameters.addAll(executable.getParameters());
+		printList(parameters, null,
 			false, "(", false, false, ",", true, false, ")",
-			p -> prettyPrinter.scan(p));
+			prettyPrinter::scan);
 	}
 
 	/** writes the thrown exception with a ListPrinter */
@@ -444,7 +454,10 @@ public class ElementPrinterHelper {
 			final int line = element.getPosition().getLine();
 			final int sourceEnd = element.getPosition().getSourceEnd();
 			final int sourceStart = element.getPosition().getSourceStart();
-			if (offset == CommentOffset.BEFORE && (comment.getPosition().getLine() < line || (sourceStart <= comment.getPosition().getSourceStart() && sourceEnd > comment.getPosition().getSourceEnd()))) {
+			boolean commentStartsInLineBefore = comment.getPosition().getLine() < line;
+			boolean commentStartsInsideUs = sourceStart <= comment.getPosition().getSourceStart() && sourceEnd > comment.getPosition().getSourceEnd();
+			boolean commentStartsBeforeUs = sourceStart >= comment.getPosition().getSourceStart() && sourceEnd > comment.getPosition().getSourceEnd();
+			if (offset == CommentOffset.BEFORE && (commentStartsInLineBefore || commentStartsInsideUs || commentStartsBeforeUs)) {
 				commentsToPrint.add(comment);
 			} else if (offset == CommentOffset.AFTER && (comment.getPosition().getSourceStart() > sourceEnd || comment.getPosition().getSourceEnd() == sourceEnd)) {
 				commentsToPrint.add(comment);

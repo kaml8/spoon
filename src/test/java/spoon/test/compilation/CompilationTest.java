@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -42,6 +43,7 @@ import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtType;
@@ -53,6 +55,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.SpoonClassNotFoundException;
+import spoon.support.StandardEnvironment;
 import spoon.support.compiler.FileSystemFolder;
 import spoon.support.compiler.ProgressLogger;
 import spoon.support.compiler.jdt.JDTBasedSpoonCompiler;
@@ -114,7 +117,7 @@ public class CompilationTest {
 				"-i", sourceFile,
 				"-o", "target/spooned",
 				"--compile",
-				"--compliance", "7",
+				"--compliance", String.valueOf(StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL),
 				"--level", "OFF"
 		});
 
@@ -268,8 +271,9 @@ public class CompilationTest {
 		launcher.getEnvironment().setComplianceLevel(9);
 		launcher.addInputResource("./src/test/resources/simple-module");
 		launcher.buildModel();
-		
-		assertTrue(launcher.getModel().getAllModules().iterator().next().getSimpleName().equals("spoonmod"));
+		Set<String> moduleNames = launcher.getModel().getAllModules().stream()
+				.map(CtNamedElement::getSimpleName).collect(Collectors.toSet());
+		assertEquals(moduleNames, Set.of("spoonmod", "unnamed module"));
 	}
 
 	@Test
@@ -481,8 +485,7 @@ public class CompilationTest {
 		launcher.getEnvironment().setInputClassLoader(urlClassLoader);
 		String[] sourceClassPath = launcher.getEnvironment().getSourceClasspath();
 		assertEquals(1, sourceClassPath.length);
-		String tail = sourceClassPath[0].substring(sourceClassPath[0].length() - expected.length());
-		assertEquals(expected, tail);
+		assertEquals(Path.of(expected).toAbsolutePath(), Path.of(sourceClassPath[0]).toAbsolutePath());
 	}
 
 	@Test

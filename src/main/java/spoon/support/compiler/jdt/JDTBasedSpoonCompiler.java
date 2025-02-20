@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: (MIT OR CECILL-C)
  *
- * Copyright (C) 2006-2019 INRIA and contributors
+ * Copyright (C) 2006-2023 INRIA and contributors
  *
- * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) of the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
+ * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) or the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
  */
 package spoon.support.compiler.jdt;
 
@@ -41,6 +41,7 @@ import spoon.reflect.visitor.PrettyPrinter;
 import spoon.reflect.visitor.Query;
 import spoon.support.Level;
 import spoon.support.QueueProcessingManager;
+import spoon.support.StandardEnvironment;
 import spoon.support.comparator.FixedOrderBasedOnFileNameCompilationUnitComparator;
 import spoon.support.compiler.SnippetCompilationError;
 import spoon.support.compiler.SpoonProgress;
@@ -73,7 +74,7 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 	protected final List<CategorizedProblem> probs = new ArrayList<>();
 	protected final TreeBuilderRequestor requestor = new TreeBuilderRequestor(this);
 	protected Factory factory;
-	protected int javaCompliance = 7;
+	protected int javaCompliance = StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL;
 	//list of java files or folders with java files which represents source of the CtModel
 	protected SpoonFolder sources = new VirtualFolder();
 	//list of java files or folders with java files which represents templates. Templates are added to CtModel too.
@@ -318,6 +319,16 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 	}
 
 	@Override
+	public List<String> getSourceModulePath() {
+		return getEnvironment().getSourceModulePath();
+	}
+
+	@Override
+	public void setSourceModulePath(List<String> sourceModulePath) {
+		getEnvironment().setSourceModulePath(sourceModulePath);
+	}
+
+	@Override
 	public String[] getTemplateClasspath() {
 		return templateClasspath;
 	}
@@ -333,7 +344,7 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 	}
 
 	protected boolean buildSources(JDTBuilder jdtBuilder) {
-		return buildUnitsAndModel(jdtBuilder, sources, getSourceClasspath(), "");
+		return buildUnitsAndModel(jdtBuilder, sources, getSourceClasspath(), getSourceModulePath(), "");
 	}
 
 	protected JDTBatchCompiler createBatchCompiler() {
@@ -353,7 +364,7 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 	}
 
 	protected boolean buildTemplates(JDTBuilder jdtBuilder) {
-		CompilationUnitDeclaration[] units = buildUnits(jdtBuilder, templates, getTemplateClasspath(), "template ");
+		CompilationUnitDeclaration[] units = buildUnits(jdtBuilder, templates, getTemplateClasspath(), List.of(), "template ");
 		buildModel(units, factory.Templates());
 		return true;
 	}
@@ -366,8 +377,13 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 	 * @param debugMessagePrefix Useful to help debugging
 	 * @return true if the model has been built without errors
 	 */
-	protected boolean buildUnitsAndModel(JDTBuilder jdtBuilder, SpoonFolder sourcesFolder, String[] classpath, String debugMessagePrefix) {
-		CompilationUnitDeclaration[] units = buildUnits(jdtBuilder, sourcesFolder, classpath, debugMessagePrefix);
+	protected boolean buildUnitsAndModel(
+					JDTBuilder jdtBuilder,
+					SpoonFolder sourcesFolder,
+					String[] classpath,
+					List<String> modulePath,
+					String debugMessagePrefix) {
+		CompilationUnitDeclaration[] units = buildUnits(jdtBuilder, sourcesFolder, classpath, modulePath, debugMessagePrefix);
 
 		// here we build the model in the template factory
 		buildModel(units, factory);
@@ -385,7 +401,12 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 	 * @param debugMessagePrefix Useful to help debugging
 	 * @return All compilationUnitDeclaration from JDT found in source folder
 	 */
-	protected CompilationUnitDeclaration[] buildUnits(JDTBuilder jdtBuilder, SpoonFolder sourcesFolder, String[] classpath, String debugMessagePrefix) {
+	protected CompilationUnitDeclaration[] buildUnits(
+					JDTBuilder jdtBuilder,
+					SpoonFolder sourcesFolder,
+					String[] classpath,
+					List<String> modulePath,
+					String debugMessagePrefix) {
 		List<SpoonFile> sourceFiles = Collections.unmodifiableList(sourcesFolder.getAllJavaFiles());
 		if (sourceFiles.isEmpty()) {
 			return EMPTY_RESULT;
@@ -395,7 +416,10 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 
 		String[] args;
 		if (jdtBuilder == null) {
-			ClasspathOptions classpathOptions = new ClasspathOptions().encoding(this.getEnvironment().getEncoding().displayName()).classpath(classpath);
+			ClasspathOptions<?> classpathOptions = new ClasspathOptions<>()
+							.encoding(this.getEnvironment().getEncoding().displayName())
+							.classpath(classpath)
+							.modulePath(modulePath);
 			ComplianceOptions complianceOptions = new ComplianceOptions().compliance(javaCompliance);
 			if (factory.getEnvironment().isPreviewFeaturesEnabled()) {
 				complianceOptions.enablePreview();

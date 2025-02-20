@@ -1,16 +1,16 @@
-[![Maven Central](https://img.shields.io/maven-central/v/fr.inria.gforge.spoon/spoon-core.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22fr.inria.gforge.spoon%22%20AND%20a%3A%22spoon-core%22)
+[![Maven Central](https://img.shields.io/maven-central/v/fr.inria.gforge.spoon/spoon-core.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22fr.inria.gforge.spoon%22%20AND%20a%3A%22spoon-core%22)
 [![GHA tests Workflow Status](https://github.com/INRIA/spoon/actions/workflows/tests.yml/badge.svg)](https://github.com/INRIA/spoon/actions/workflows/tests.yml)
-[![Coverage Status](https://coveralls.io/repos/INRIA/spoon/badge.png)](https://coveralls.io/r/INRIA/spoon)
+[![Coverage Status](https://coveralls.io/repos/INRIA/spoon/badge.svg)](https://coveralls.io/r/INRIA/spoon)
 [![Maintainability Rating](https://sonarqube.ow2.org/api/project_badges/measure?project=fr.inria.gforge.spoon%3Aspoon-core&metric=sqale_rating)](https://sonarqube.ow2.org/dashboard?id=fr.inria.gforge.spoon%3Aspoon-core)
 [![Reproducible Builds](https://img.shields.io/badge/Reproducible_Builds-ok-success?labelColor=1e5b96)](https://github.com/jvm-repo-rebuild/reproducible-central#fr.inria.gforge.spoon:spoon-core)
 
 # Spoon
 
-Spoon is an open-source library to analyze, rewrite, transform, transpile Java source code. It parses source files to build a well-designed AST with powerful analysis and transformation API. It fully supports modern Java versions up to Java 16. Spoon is an official Inria open-source project, and member of the [OW2](https://www.ow2.org/) open-source consortium.
+Spoon is an open-source library to analyze, rewrite, transform, transpile Java source code. It parses source files to build a well-designed AST with powerful analysis and transformation API. It supports modern Java versions up to Java 20. Spoon is an official Inria open-source project, and member of the [OW2](https://www.ow2.org/) open-source consortium.
 
 ## Documentation
 
-The latest official documentation is available at <http://spoon.gforge.inria.fr/>.
+The latest official documentation is available at <https://spoon.gforge.inria.fr/>.
 
 ### Academic usage
 
@@ -50,7 +50,7 @@ CtClass l = Launcher.parseClass("class A { void m() { System.out.println(\"yeah\
 
 Documentation:
 
-- Reference documentation: <http://spoon.gforge.inria.fr/> (contains the content of the [doc folder](https://github.com/INRIA/spoon/tree/master/doc))
+- Reference documentation: <https://spoon.gforge.inria.fr/> (contains the content of the [doc folder](https://github.com/INRIA/spoon/tree/master/doc))
 - Code examples: <https://github.com/SpoonLabs/spoon-examples>
 - Videos: [Spoon: Getting Started - Simon Urli @ OW2Con'18 (Paris)](https://www.youtube.com/watch?v=ZZzdVTIu-OY), [Generate Test Assertion with Spoon - Benjamin Danglot @ OW2Con'17 (Paris)](https://www.youtube.com/watch?v=JcCIbjnkfD4)
 
@@ -90,7 +90,7 @@ mvn test
 
 ### Download
 
-Latest version: <https://search.maven.org/remote_content?g=fr.inria.gforge.spoon&a=spoon-core&v=LATEST&c=jar-with-dependencies> - [Javadoc](http://spoon.gforge.inria.fr/mvnsites/spoon-core/apidocs/index.html)
+Latest version: <https://search.maven.org/remote_content?g=fr.inria.gforge.spoon&a=spoon-core&v=LATEST&c=jar-with-dependencies> - [Javadoc](https://spoon.gforge.inria.fr/mvnsites/spoon-core/apidocs/index.html)
 
 Maven:
 
@@ -98,7 +98,7 @@ Maven:
 <dependency>
     <groupId>fr.inria.gforge.spoon</groupId>
     <artifactId>spoon-core</artifactId>
-    <!-- See rendered release value at http://spoon.gforge.inria.fr/ -->
+    <!-- See rendered release value at https://spoon.gforge.inria.fr/ -->
     <version>{{site.spoon_release}}</version>
 </dependency>
 ```
@@ -106,6 +106,10 @@ Maven:
 ## Releases
 
 <!-- .* Marker comment. -->
+
+- August 31 2023, Spoon 10.4.1 [(changelog)](https://github.com/INRIA/spoon/releases/tag/v10.4.1)
+- Jul 6 2023, Spoon 10.4.0 [(changelog)](https://github.com/INRIA/spoon/releases/tag/v10.4.0)
+- March 13 2023, Spoon 10.3.0 [(changelog)](https://github.com/INRIA/spoon/releases/tag/spoon-core-10.3.0)
 - Oct 2022, Spoon 10.2.0 [(changelog)](https://github.com/INRIA/spoon/pull/4946)
 - April 2022, Spoon 10.1.0 [(changelog)](https://github.com/INRIA/spoon/releases/tag/spoon-core-10.1.0)
 - October 2021, Spoon 10.0.0 [(changelog)](https://github.com/INRIA/spoon/releases/tag/spoon-core-10.0.0)
@@ -156,6 +160,11 @@ Maven:
 
 Spoon is Free and Open Source, double-licensed under the ([CeCILL-C license](https://cecill.info/licences.en.html) - French equivalent to LGPL) and the MIT license.
 
+## JProfiler
+
+Spoon is developed with the help of JProfiler, a Java profiler by ej-technologies GmbH. JProfiler supports the development of Spoon by providing its full-featured Java Profiler for free. We thank ej-technologies GmbH for this support.
+
+[![JProfiler](https://www.ej-technologies.com/images/product_banners/jprofiler_large.png)](https://www.ej-technologies.com/products/jprofiler/overview.html)
 ## Github Contributors
 
 This list is generated by `chore/generate-contributor-list.py`. If you're not listed or you'd like to have your full name, please post to https://github.com/INRIA/spoon/issues/3909.
@@ -174,6 +183,7 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * arsenkhy
 * Artamm
 * Artur Bosch
+* Arvid Siberov
 * aryan
 * Ashutosh Kumar Verma
 * aveuiller
@@ -182,6 +192,7 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Benoit Cornu
 * Carlos Noguera
 * Ceki Gülcü
+* chammp
 * Charm
 * ChrisSquare
 * Christophe Dufour
@@ -189,10 +200,12 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Clemens Bartz
 * Clément Fournier
 * César Soto Valero
+* Daniel Bobbert
 * Darius Sas
 * David Bernard
 * Didier Donsez
 * Diorcet Yann
+* Dorota Kopczyk
 * dufaux
 * dwayneb
 * dya-tel
@@ -207,6 +220,7 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Filip Krakowski
 * Gabriel Chaperon Burgos
 * gibahjoe
+* GitHub Actions Bot
 * GluckZhang
 * Gregor Zeitlinger
 * gtoison
@@ -216,6 +230,7 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Haris Adzemovic
 * HectorSM
 * Henry Chu
+* Hervé Boutemy
 * Horia Constantin
 * I-Al-Istannen
 * intrigus-lgtm
@@ -227,11 +242,13 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * leventov
 * Lionel Seinturier
 * lodart
+* Lucas
 * Lukas Krejci
 * Luke Merrick
 * Marcel Manseer
 * Marcel Steinbeck
 * Martin Monperrus
+* Martin Wittlinger
 * MartinWitt
 * Matias Martinez
 * Maxim Stefanov
@@ -241,6 +258,7 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Mickael Istria
 * Miguel Sozinho Ramalho
 * Mikael Forsberg
+* Mr. Pine
 * Muhammet Ali AKBAY
 * Nicolas Harrand
 * Nicolas Pessemier
@@ -248,9 +266,12 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Noah Santschi-Cooney
 * Olivier Barais
 * Ondřej Šebek
+* Patrick Schmitt
 * Pavel Vojtechovsky
 * peroksid90
+* Philippe Ombredanne
 * Phillip Schichtel
+* priyanka-28
 * Quentin LE DILAVREC
 * raymogg
 * Renaud Pawlak
@@ -260,6 +281,8 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Rijnard van Tonder
 * Rohitesh Kumar Jain
 * Roman Leventov
+* Ryota Hiyoshi
+* Sander Ploegsma
 * santos-samuel
 * scootafew
 * Scott Dickerson
@@ -273,7 +296,9 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * srlm
 * ST0NEWALL
 * Stefan Wolf
+* StepSecurity Bot
 * Sébastien Bertrand
+* The Spoon Bot
 * Thimo Seitz
 * Thomas Durieux
 * tiagodrcarvalho
@@ -285,5 +310,6 @@ This list is generated by `chore/generate-contributor-list.py`. If you're not li
 * Wouter Smeenk
 * Wreulicke
 * Yann Diorcet
+* Yogya Tulip Gamage
 * Zhang Xindong
 * Дмитрий

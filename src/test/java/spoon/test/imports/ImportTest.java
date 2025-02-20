@@ -16,7 +16,9 @@
  */
 package spoon.test.imports;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import spoon.Launcher;
 import spoon.SpoonException;
@@ -62,6 +64,7 @@ import spoon.support.DefaultCoreFactory;
 import spoon.support.JavaOutputProcessor;
 import spoon.support.StandardEnvironment;
 import spoon.support.comparator.CtLineElementComparator;
+import spoon.support.compiler.VirtualFile;
 import spoon.support.util.SortedList;
 import spoon.test.imports.testclasses.A;
 import spoon.test.imports.testclasses.ClientClass;
@@ -71,6 +74,8 @@ import spoon.test.imports.testclasses.SubClass;
 import spoon.test.imports.testclasses.Tacos;
 import spoon.test.imports.testclasses.ToBeModified;
 import spoon.test.imports.testclasses.badimportissue3320.source.TestSource;
+import spoon.testing.utils.GitHubIssue;
+import spoon.testing.utils.LineSeparatorExtension;
 import spoon.testing.utils.ModelTest;
 import spoon.testing.utils.ModelUtils;
 
@@ -92,8 +97,11 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
 import static spoon.testing.utils.ModelUtils.canBeBuilt;
@@ -363,7 +371,7 @@ public class ImportTest {
 		final CtType<Object> aTacos = launcher.getFactory().Type().get(Tacos.class);
 		final CtStatement assignment = aTacos.getMethod("m").getBody().getStatement(0);
 		assertTrue(assignment instanceof CtLocalVariable);
-		assertEquals("Constants.CONSTANT.foo", printByPrinter(((CtLocalVariable) assignment).getAssignment()));
+		assertEquals("CONSTANT.foo", printByPrinter(((CtLocalVariable) assignment).getAssignment()));
 	}
 
 	@Test
@@ -769,7 +777,7 @@ public class ImportTest {
 				output,
 				not(containsString("import static spoon.test.imports.testclasses.ItfWithEnum$Bar.Lip;"))
 		);
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
@@ -792,7 +800,7 @@ public class ImportTest {
 
 		assertThat("The file should not contain the import of enum", output, not(containsString("import spoon.reflect.path.CtRole;")));
 		assertThat("The file should contain the static import of enum field", output, not(containsString("import spoon.reflect.path.CtRole.NAME;")));
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
@@ -813,7 +821,7 @@ public class ImportTest {
 		String output = prettyPrinter.getResult();
 
 		assertThat("The file should not contain a static import for NOFOLLOW_LINKS", output, not(containsString("import static java.nio.file.LinkOption.NOFOLLOW_LINKS;")));
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
@@ -833,7 +841,7 @@ public class ImportTest {
 		prettyPrinter.calculate(element.getPosition().getCompilationUnit(), toPrint);
 		String output = prettyPrinter.getResult();
 
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
@@ -885,11 +893,11 @@ public class ImportTest {
 		assertThat(result, hasItem(Object.class.getName()));
 
 		//contract: super type of Object is nothing
-		List<CtTypeReference<?>> typeResult = clientClass.getFactory().Type().OBJECT.map(new SuperInheritanceHierarchyFunction().includingSelf(false).returnTypeReferences(true)).list();
+		List<CtTypeReference<?>> typeResult = clientClass.getFactory().Type().objectType().map(new SuperInheritanceHierarchyFunction().includingSelf(false).returnTypeReferences(true)).list();
 		assertEquals(0, typeResult.size());
-		typeResult = clientClass.getFactory().Type().OBJECT.map(new SuperInheritanceHierarchyFunction().includingSelf(true).returnTypeReferences(true)).list();
+		typeResult = clientClass.getFactory().Type().objectType().map(new SuperInheritanceHierarchyFunction().includingSelf(true).returnTypeReferences(true)).list();
 		assertEquals(1, typeResult.size());
-		assertEquals(clientClass.getFactory().Type().OBJECT, typeResult.get(0));
+		assertEquals(clientClass.getFactory().Type().objectType(), typeResult.get(0));
 	}
 
 	@Test
@@ -1007,7 +1015,7 @@ public class ImportTest {
 		launcher.setSourceOutputDirectory(outputDir);
 		launcher.run();
 
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
@@ -1019,7 +1027,7 @@ public class ImportTest {
 		launcher.setSourceOutputDirectory(outputDir);
 		launcher.run();
 
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
@@ -1057,7 +1065,7 @@ public class ImportTest {
 		launcher.setSourceOutputDirectory(outputDir);
 		launcher.run();
 
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 
 		Path outputDirPath = Path.of(outputDir);
 		Path pathA = outputDirPath.resolve("spoon/test/imports/testclasses/multiplecu/A.java");
@@ -1073,7 +1081,7 @@ public class ImportTest {
 	}
 
 	@Test
-	public void testStaticMethodWithDifferentClassSameNameJava7NoCollision() {
+	public void testStaticMethodWithDifferentClassSameNameJava7PlusNoCollision() {
 		// contract: when there is a collision between class names when using static method, we should create a static import for the method
 		final Launcher launcher = new Launcher();
 		launcher.getEnvironment().setAutoImports(true);
@@ -1083,7 +1091,7 @@ public class ImportTest {
 		launcher.addInputResource("./src/test/resources/spoon/test/imports/testclasses2/apachetestsuite/enum2/");
 		launcher.addInputResource("./src/test/resources/spoon/test/imports/testclasses2/apachetestsuite/LangTestSuite.java");
 		launcher.setSourceOutputDirectory(outputDir);
-		launcher.getEnvironment().setComplianceLevel(7);
+		launcher.getEnvironment().setComplianceLevel(StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 		launcher.run();
 		PrettyPrinter prettyPrinter = launcher.createPrettyPrinter();
 
@@ -1097,10 +1105,11 @@ public class ImportTest {
 		assertThat("The file should contain a static import ", output, containsString("import static spoon.test.imports.testclasses2.apachetestsuite.enums.EnumTestSuite.suite;"));
 		assertThat("The call to the last EnumTestSuite should be in FQN", output, containsString("suite.add(suite());"));
 
-		canBeBuilt(outputDir, 7);
+		canBeBuilt(outputDir, StandardEnvironment.DEFAULT_CODE_COMPLIANCE_LEVEL);
 	}
 
 	@Test
+	@Disabled("Compliance level 3 is not supported anymore")
 	public void testStaticMethodWithDifferentClassSameNameJava3NoCollision() {
 		// contract: when there is a collision between class names when using static method, we could not create a static import
 		// as it is not compliant with java < 1.5, so we should use fully qualified name of the class
@@ -1130,6 +1139,7 @@ public class ImportTest {
 	}
 
 	@Test
+	@Disabled("Compliance level 3 is not supported anymore")
 	public void testStaticMethodWithDifferentClassSameNameCollision() {
 		// contract: when using static method, if there is a collision between class name AND between method names,
 		// we can only use the fully qualified name of the class to call the static method
@@ -1524,10 +1534,10 @@ public class ImportTest {
 		List<CtStatement> statements = ctor.getBody().getStatements();
 
 		assertEquals("super(context, attributeSet)", statements.get(0).toString());
-		assertEquals("mButton = ((Button) (findViewById(page_button_button)))", statements.get(1).toString());
-		assertEquals("mCurrentActiveColor = getColor(c4_active_button_color)", statements.get(2).toString());
-		assertEquals("mCurrentActiveColor = getResources().getColor(c4_active_button_color)", statements.get(3).toString());
-		assertEquals("mCurrentActiveColor = getData().getResources().getColor(c4_active_button_color)", statements.get(4).toString());
+		assertEquals("mButton = ((Button) (findViewById(id.page_button_button)))", statements.get(1).toString());
+		assertEquals("mCurrentActiveColor = getColor(color.c4_active_button_color)", statements.get(2).toString());
+		assertEquals("mCurrentActiveColor = getResources().getColor(color.c4_active_button_color)", statements.get(3).toString());
+		assertEquals("mCurrentActiveColor = getData().getResources().getColor(color.c4_active_button_color)", statements.get(4).toString());
 	}
 
 	@Test
@@ -1772,5 +1782,125 @@ public class ImportTest {
 		assertEquals(1, compilationUnit.getImports().stream()
 				.filter(ctImport -> ctImport.prettyprint().equals("import spoon.test.imports.testclasses.badimportissue3320.source.other.SomeObjectDto;"))
 				.count());
+	}
+
+	@ModelTest("src/test/resources/imports/UnqualifiedCalls.java")
+	void correctlySetsThisTargetForUnqualifiedCalls(Factory factory) {
+		CtType<?> test = factory.Type().get("Test$Inner");
+		CtMethod<?> method = test.getMethodsByName("entrypoint").get(0);
+		CtInvocation<?> actualThisInvocation = method.getBody().getStatement(0);
+		CtInvocation<?> outerThisInvocation = method.getBody().getStatement(1);
+		CtInvocation<?> staticOuterInvocation = method.getBody().getStatement(2);
+		CtInvocation<?> staticInvocation = method.getBody().getStatement(3);
+
+		assertThat(actualThisInvocation.getTarget().isImplicit(), is(true));
+		assertThat(actualThisInvocation.getTarget(), is(instanceOf(CtThisAccess.class)));
+		assertThat(
+			((CtTypeAccess<?>) ((CtThisAccess<?>) actualThisInvocation.getTarget()).getTarget())
+				.getAccessedType()
+				.getQualifiedName(),
+			is("Test$Inner")
+		);
+
+		assertThat(outerThisInvocation.getTarget().isImplicit(), is(true));
+		assertThat(outerThisInvocation.getTarget(), is(instanceOf(CtThisAccess.class)));
+		assertThat(
+			((CtTypeAccess<?>) ((CtThisAccess<?>) outerThisInvocation.getTarget()).getTarget())
+				.getAccessedType()
+				.getQualifiedName(),
+			is("Test")
+		);
+
+		assertThat(staticOuterInvocation.getTarget().isImplicit(), is(true));
+		assertThat(staticOuterInvocation.getTarget(), is(instanceOf(CtTypeAccess.class)));
+		assertThat(
+			((CtTypeAccess<?>) staticOuterInvocation.getTarget()).getAccessedType().getQualifiedName(),
+			is("Test")
+		);
+
+		assertThat(staticInvocation.getTarget().isImplicit(), is(true));
+		assertThat(staticInvocation.getTarget(), is(instanceOf(CtTypeAccess.class)));
+		assertThat(
+			((CtTypeAccess<?>) staticInvocation.getTarget()).getAccessedType().getQualifiedName(),
+			is("java.lang.System")
+		);
+
+	}
+
+	@Test
+	@ExtendWith(LineSeparatorExtension.class)
+	void testAutoimportConflictingSimpleNames() {
+		// contract: Do not import two classes with the same simple name
+
+		Launcher launcher = new Launcher();
+		launcher.getEnvironment().setAutoImports(true);
+		launcher.addInputResource(new VirtualFile(
+			"package foo.bar.baz;" +
+				"public class Locale {\n" +
+				"  public static Locale HELLO;\n" +
+				"}\n",
+			"foo/bar/Locale.java"
+		));
+		launcher.addInputResource(new VirtualFile(
+			"package bar;\n" +
+				"public class User {\n" +
+				"  public static void foo() {\n" +
+				"    System.out.println(foo.bar.baz.Locale.HELLO);\n" +
+				"    System.out.println(java.util.Locale.GERMANY);\n" +
+				"  }\n" +
+				"}\n",
+			"bar/User.java"
+		));
+		launcher.buildModel();
+		CtType<?> user = launcher.getFactory().Type().get("bar.User");
+		assertEquals(
+			"package bar;\n" +
+				"import foo.bar.baz.Locale;\n" +
+				"public class User {\n" +
+				"    public static void foo() {\n" +
+				"        System.out.println(Locale.HELLO);\n" +
+				"        System.out.println(java.util.Locale.GERMANY);\n" +
+				"    }\n" +
+				"}\n",
+			user.toStringWithImports()
+		);
+	}
+
+	@GitHubIssue(issueNumber = 5210, fixed = true)
+	@ModelTest(value = {"src/test/resources/inner-class"}, complianceLevel = 11, autoImport = true)
+	void staticImports_ofNestedTypes_shouldBeRecorded(CtModel model) {
+		// contract: static imports of nested types should be recorded
+		// arrange
+		CtType<?> mainType = model.getElements(new TypeFilter<>(CtType.class)).stream()
+				.filter(t -> t.getSimpleName().equals("Main"))
+				.findFirst().orElseThrow();
+
+		// assert
+		List<CtImport> imports = mainType.getPosition().getCompilationUnit().getImports();
+		assertThat(imports, hasSize(2));
+
+		CtImport import0 = imports.get(0);
+		assertThat(import0.getReference().getSimpleName(), is("InnerClass"));
+	}
+
+	@ModelTest(value = {"src/test/resources/static-method-and-type"}, autoImport = true)
+	void staticTypeAndMethodImport_importShouldAppearOnlyOnceIfTheirSimpleNamesAreEqual(CtModel model) {
+		// contract: static type and method import should appear only once if their simple names are equal
+		// arrange
+		CtType<?> mainType = model.getElements(new TypeFilter<>(CtType.class)).stream()
+				.filter(t -> t.getSimpleName().equals("Main"))
+				.findFirst().orElseThrow();
+
+		// assert
+		List<CtImport> imports = mainType.getPosition().getCompilationUnit().getImports();
+		assertThat(imports, hasSize(2));
+
+		CtImport import0 = imports.get(0);
+		assertThat(import0.getImportKind(), is(CtImportKind.METHOD));
+		assertThat(import0.getReference().getSimpleName(), is("foo"));
+
+		CtImport import1 = imports.get(1);
+		assertThat(import1.getImportKind(), is(CtImportKind.TYPE));
+		assertThat(import1.getReference().getSimpleName(), is("foo"));
 	}
 }

@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: (MIT OR CECILL-C)
  *
- * Copyright (C) 2006-2019 INRIA and contributors
+ * Copyright (C) 2006-2023 INRIA and contributors
  *
- * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) of the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
+ * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) or the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
  */
 package spoon.support.compiler.jdt;
 
@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.jspecify.annotations.Nullable;
+
 import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractSwitch;
 import spoon.reflect.code.CtBinaryOperator;
@@ -20,9 +22,11 @@ import spoon.reflect.code.CtCase;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtConditional;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtNewArray;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
@@ -348,7 +352,21 @@ public class JDTCommentBuilder {
 
 			@Override
 			public <T> void scanCtVariable(CtVariable<T> e) {
-				e.addComment(comment);
+				if (e instanceof CtLocalVariable<T> lv && lv.getDefaultExpression() != null) {
+					CtExpression<T> defaultExpression = lv.getDefaultExpression();
+					int variableStart = e.getPosition().getSourceStart();
+					int commentStart = comment.getPosition().getSourceStart();
+					int defaultExprStart = defaultExpression.getPosition().getSourceStart();
+					// Handle `int a = /* foobar */ foo();` by attaching the comment to `foo()`
+					// In those cases the comment and `foo()` start at the same position
+					if (commentStart > variableStart && commentStart >= defaultExprStart) {
+						defaultExpression.addComment(comment);
+					} else {
+						e.addComment(comment);
+					}
+				} else {
+					e.addComment(comment);
+				}
 			}
 
 			private <S> void visitSwitch(CtAbstractSwitch<S> e) {
@@ -454,7 +472,9 @@ public class JDTCommentBuilder {
 
 			@Override
 			public <T> void visitCtLambda(CtLambda<T> e) {
-				if (e.getExpression() != null) {
+				if (e.getExpression() != null && e.getParameters().isEmpty()) {
+					e.getExpression().addComment(comment);
+				} else if (e.getExpression() != null && !e.getParameters().isEmpty()) {
 					CtParameter<?> lastParameter = e.getParameters().get(e.getParameters().size() - 1);
 					if (comment.getPosition().getSourceStart() > lastParameter.getPosition().getSourceEnd()) {
 						e.getExpression().addComment(comment);
@@ -572,7 +592,7 @@ public class JDTCommentBuilder {
 	 * @param e
 	 * @return body of element or null if this element has no body
 	 */
-	static CtElement getBody(CtElement e) {
+	static @Nullable CtElement getBody(CtElement e) {
 		if (e instanceof CtBodyHolder) {
 			return ((CtBodyHolder) e).getBody();
 		}
